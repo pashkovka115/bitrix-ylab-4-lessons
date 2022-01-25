@@ -5,3 +5,5 @@ Thumbs.db
 /upload
 /local/vendor
 _*
+/local/modules/sprint.migration
+/local/composer.lock

@@ -92,7 +92,7 @@ $APPLICATION->IncludeFile(
 		</div>
 		
 		<div id="content">
-		
+		<?php if ($APPLICATION->GetCurPage() != '/moy-razdel/moy-komponent/'){ ?>
 			<div id="sidebar">
 <?$APPLICATION->IncludeComponent("bitrix:menu", "left", array(
 	"ROOT_MENU_TYPE" => "left",
@@ -152,6 +152,6 @@ $APPLICATION->IncludeFile(
 					<div class="bottom"></div>
 				</div>
 			</div>
-		
+		<?php }else{ ?> <style> #workarea{ width: 100% !important; } </style> <?php } ?>
 			<div id="workarea">
 				<h1 id="pagetitle"><?$APPLICATION->ShowTitle(false);?></h1>
