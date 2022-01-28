@@ -2,9 +2,9 @@
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("Мой раздел");
 ?><?$APPLICATION->IncludeComponent(
-	"bitrix:news.list",
-	"my_list_news",
-	Array(
+	"bitrix:news.list", 
+	"my_list_news", 
+	array(
 		"ACTIVE_DATE_FORMAT" => "d.m.Y",
 		"ADD_SECTIONS_CHAIN" => "Y",
 		"AJAX_MODE" => "N",
@@ -25,10 +25,13 @@ $APPLICATION->SetTitle("Мой раздел");
 		"DISPLAY_PICTURE" => "Y",
 		"DISPLAY_PREVIEW_TEXT" => "Y",
 		"DISPLAY_TOP_PAGER" => "N",
-		"FIELD_CODE" => array(0=>"",1=>"",),
+		"FIELD_CODE" => array(
+			0 => "",
+			1 => "",
+		),
 		"FILTER_NAME" => "",
 		"HIDE_LINK_WHEN_NO_DETAIL" => "N",
-		"IBLOCK_ID" => "6",
+		"IBLOCK_ID" => "7",
 		"IBLOCK_TYPE" => "cards",
 		"INCLUDE_IBLOCK_INTO_CHAIN" => "Y",
 		"INCLUDE_SUBSECTIONS" => "Y",
@@ -44,7 +47,18 @@ $APPLICATION->SetTitle("Мой раздел");
 		"PARENT_SECTION" => "",
 		"PARENT_SECTION_CODE" => "",
 		"PREVIEW_TRUNCATE_LEN" => "",
-		"PROPERTY_CODE" => array(0=>"END_DATE",1=>"CARD_NUMBER",2=>"QUANTITY_MONTH",3=>"PRICE_MONTH",4=>"CARD_TYPE",5=>"CARD_USER",6=>"",),
+		"PROPERTY_CODE" => array(
+			0 => "CARD_EXPIRATION_DATE",
+			1 => "CARD_NUMBER",
+			2 => "CARD_PERIOD",
+			3 => "CARD_COST",
+			4 => "CARD_TYPE",
+			5 => "CARD_USER",
+			6 => "END_DATE",
+			7 => "QUANTITY_MONTH",
+			8 => "PRICE_MONTH",
+			9 => "",
+		),
 		"SET_BROWSER_TITLE" => "Y",
 		"SET_LAST_MODIFIED" => "N",
 		"SET_META_DESCRIPTION" => "Y",
@@ -57,5 +71,6 @@ $APPLICATION->SetTitle("Мой раздел");
 		"SORT_ORDER1" => "DESC",
 		"SORT_ORDER2" => "ASC",
 		"STRICT_SECTION_CHECK" => "N"
-	)
+	),
+	false
 );?><?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>

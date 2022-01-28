@@ -3,12 +3,18 @@
 namespace Sprint\Migration;
 
 
-class AddMyProperties20220121151513 extends Version
+class Lesson220220127183557 extends Version
 {
-    protected $description = "Написать миграцию на добавление 3-х свойств";
+    /** @var string $description */
+    protected $description = "";
 
+    /** @var string $moduleVersion */
     protected $moduleVersion = "4.0.3";
 
+    /**
+     * @return bool|void
+     * @throws Exceptions\HelperException
+     */
     public function up()
     {
         $helper = $this->getHelperManager();
@@ -16,10 +22,10 @@ class AddMyProperties20220121151513 extends Version
         $iblockId = $helper->Iblock()->getIblockIdIfExists('credit_card', 'cards');
 
         $helper->Iblock()->addPropertyIfNotExists($iblockId, [
-            'NAME' => 'Стоимость обслуживания карты в месяц',
+            'NAME' => 'Стоимость обслуживания карты в мес.',
             'ACTIVE' => 'Y',
             'SORT' => '500',
-            'CODE' => 'PRICE_MONTH',
+            'CODE' => 'CARD_COST',
             'DEFAULT_VALUE' => '',
             'PROPERTY_TYPE' => 'N',
             'ROW_COUNT' => '1',
@@ -41,10 +47,10 @@ class AddMyProperties20220121151513 extends Version
         ]);
 
         $helper->Iblock()->addPropertyIfNotExists($iblockId, [
-            'NAME' => 'Срок действия карты в месяцах',
+            'NAME' => 'Срок действия карты в мес.',
             'ACTIVE' => 'Y',
             'SORT' => '500',
-            'CODE' => 'QUANTITY_MONTH',
+            'CODE' => 'CARD_PERIOD',
             'DEFAULT_VALUE' => '',
             'PROPERTY_TYPE' => 'N',
             'ROW_COUNT' => '1',
@@ -69,9 +75,9 @@ class AddMyProperties20220121151513 extends Version
             'NAME' => 'Дата окончания действия карты',
             'ACTIVE' => 'Y',
             'SORT' => '500',
-            'CODE' => 'END_DATE',
+            'CODE' => 'CARD_EXPIRATION_DATE',
             'DEFAULT_VALUE' => '',
-            'PROPERTY_TYPE' => 'S:Date',
+            'PROPERTY_TYPE' => 'S',
             'ROW_COUNT' => '1',
             'COL_COUNT' => '30',
             'LIST_TYPE' => 'L',
@@ -85,20 +91,24 @@ class AddMyProperties20220121151513 extends Version
             'FILTRABLE' => 'N',
             'IS_REQUIRED' => 'N',
             'VERSION' => '2',
-            'USER_TYPE' => null,
+            'USER_TYPE' => 'DateTime',
             'USER_TYPE_SETTINGS' => null,
             'HINT' => '',
         ]);
     }
 
+    /**
+     * @return bool|void
+     * @throws Exceptions\HelperException
+     */
     public function down()
     {
         $helper = $this->getHelperManager();
 
         $iblockId = $helper->Iblock()->getIblockIdIfExists('credit_card', 'cards');
 
-        $helper->Iblock()->deletePropertyIfExists($iblockId, 'PRICE_MONTH');
-        $helper->Iblock()->deletePropertyIfExists($iblockId, 'QUANTITY_MONTH');
-        $helper->Iblock()->deletePropertyIfExists($iblockId, 'END_DATE');
+        $helper->Iblock()->deletePropertyIfExists($iblockId, 'CARD_COST');
+        $helper->Iblock()->deletePropertyIfExists($iblockId, 'CARD_PERIOD');
+        $helper->Iblock()->deletePropertyIfExists($iblockId, 'CARD_EXPIRATION_DATE');
     }
 }

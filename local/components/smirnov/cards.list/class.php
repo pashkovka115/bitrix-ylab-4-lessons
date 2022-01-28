@@ -26,7 +26,6 @@ class CardsListComponent extends CBitrixComponent
     /** @var string $templateName Имя шаблона компонента */
     private $templateName;
 
-
     /**
      * @param $arParams
      * @return array
@@ -41,7 +40,6 @@ class CardsListComponent extends CBitrixComponent
         return $arParams;
     }
 
-
     /**
      * Метод executeComponent
      *
@@ -52,19 +50,15 @@ class CardsListComponent extends CBitrixComponent
     {
         $this->idIBlock = self::getIBlockIdByCode($this->arParams['IBLOCK_CODE']);
 
-        if ($this->templateName == 'grid')
-        {
+        if ($this->templateName == 'grid') {
             $this->showByGrid();
-        }
-        else
-        {
+        } else {
             $this->arResult['ITEMS'] = $this->getElements();
         }
 
 
         $this->includeComponentTemplate();
     }
-
 
     /**
      * Получим элементы ИБ
@@ -74,52 +68,55 @@ class CardsListComponent extends CBitrixComponent
     {
         $result = [];
 
-        $arFilter = [
-            'ACTIVE' => 'Y',
-            'IBLOCK_ID' => $this->idIBlock,
-        ];
+        if (!$this->getGridNav()->allRecordsShown()) {
+            $arNav['iNumPage'] = $this->getGridNav()->getCurrentPage();
+            $arNav['nPageSize'] = $this->getGridNav()->getPageSize();
+        } else {
+            $arNav = false;
+        }
+
+        $arFilter = $this->getGridFilterValues();
+
+        $arCurSort = $this->getObGridParams()->getSorting(['sort' => ['ID' => 'DESC']])['sort'];
 
         $elements = CIBlockElement::GetList(
-            [],
+            $arCurSort,
             $arFilter,
             false,
-            false,
+            $arNav,
             [
                 'ID',
                 'IBLOCK_ID',
-                'NAME',
                 'PROPERTY_CARD_NUMBER',
                 'PROPERTY_CARD_USER',
                 'PROPERTY_CARD_TYPE',
-                'PROPERTY_PRICE_MONTH',
-                'PROPERTY_QUANTITY_MONTH',
-                'PROPERTY_END_DATE',
+                'PROPERTY_CARD_PERIOD',
+                'PROPERTY_CARD_COST',
+                'PROPERTY_CARD_EXPIRATION_DATE'
             ]
         );
 
 
-        while ($element = $elements->GetNext())
-        {
+        while ($element = $elements->GetNext()) {
             $cardSecret = md5($element['PROPERTY_CARD_NUMBER_VALUE']);
+
+            $cardCost = (int)$element['PROPERTY_CARD_COST_VALUE'] * (int)$element['PROPERTY_CARD_PERIOD_VALUE'];
 
             $result[] = [
                 'ID' => $element['ID'],
-                'NAME' => $element['NAME'],
                 'CARD_NUMBER' => $element['PROPERTY_CARD_NUMBER_VALUE'],
                 'CARD_USER' => $element['PROPERTY_CARD_USER_VALUE'],
                 'CARD_TYPE' => $element['PROPERTY_CARD_TYPE_VALUE'],
-
-                'PRICE_MONTH' => $element['PROPERTY_PRICE_MONTH_VALUE'],
-                'QUANTITY_MONTH' => $element['PROPERTY_QUANTITY_MONTH_VALUE'],
-                'END_DATE' => $element['PROPERTY_END_DATE_VALUE'],
-
                 'CARD_SECRET' => $cardSecret,
+                'CARD_COST' => $element['PROPERTY_CARD_COST_VALUE'],
+                'CARD_PERIOD' => $element['PROPERTY_CARD_PERIOD_VALUE'],
+                'CARD_EXPIRATION_DATE' => $element['PROPERTY_CARD_EXPIRATION_DATE_VALUE'],
+                'SUM_TOTAL' => $cardCost,
             ];
         }
 
         return $result;
     }
-
 
     /**
      * Отображение через грид
@@ -137,7 +134,6 @@ class CardsListComponent extends CBitrixComponent
         $this->arResult['BUTTONS']['ADD']['NAME'] = Loc::getMessage('YLAB.CARD.LIST.CLASS.ADD');
     }
 
-
     /**
      * Возвращает содержимое (тело) таблицы.
      *
@@ -149,33 +145,30 @@ class CardsListComponent extends CBitrixComponent
 
         $arItems = $this->getElements();
 
-        foreach ($arItems as $arItem)
-        {
+        foreach ($arItems as $arItem) {
             $arGridElement = [];
 
             $arGridElement['data'] = [
-                    'ID' => $arItem['ID'],
-                    'CARD_NUMBER' => $arItem['CARD_NUMBER'],
-                    'CARD_USER' => $arItem['CARD_USER'],
-                    'CARD_TYPE' => $arItem['CARD_TYPE'],
-                    'CARD_SECRET' => $arItem['CARD_SECRET'],
-
-                    'PRICE_MONTH' => $arItem['PRICE_MONTH'],
-                    'QUANTITY_MONTH' => $arItem['QUANTITY_MONTH'],
-                    'SUMM_PRICE_MONTH' => $arItem['PRICE_MONTH'] * $arItem['QUANTITY_MONTH'],
-                    'END_DATE' => $arItem['END_DATE'],
+                'ID' => $arItem['ID'],
+                'CARD_NUMBER' => $arItem['CARD_NUMBER'],
+                'CARD_USER' => $arItem['CARD_USER'],
+                'CARD_TYPE' => $arItem['CARD_TYPE'],
+                'CARD_SECRET' => $arItem['CARD_SECRET'],
+                'CARD_COST' => $arItem['CARD_COST'],
+                'CARD_PERIOD' => $arItem['CARD_PERIOD'],
+                'CARD_EXPIRATION_DATE' => $arItem['CARD_EXPIRATION_DATE'],
+                'SUM_TOTAL' => $arItem['SUM_TOTAL'],
             ];
 
             $arGridElement['actions'] = [
                 [
-                    'text' => Loc::getMessage('YLAB.CARD.LIST.CLASS.EDIT'),
-//                    'onclick' => '#'
+                    'text' => Loc::getMessage('YLAB.CARD.LIST.CLASS.DELETE'),
+                    'onclick' => 'document.location.href="/"'
                 ],
                 [
-                    'text' => Loc::getMessage('YLAB.CARD.LIST.CLASS.REMOVE'),
-//                    'onclick' => '#'
+                    'text' => Loc::getMessage('YLAB.CARD.LIST.CLASS.EDIT'),
+                    'onclick' => 'document.location.href="/"'
                 ]
-
             ];
 
             $arBody[] = $arGridElement;
@@ -183,7 +176,6 @@ class CardsListComponent extends CBitrixComponent
 
         return $arBody;
     }
-
 
     /**
      * Возвращает идентификатор грида.
@@ -194,7 +186,6 @@ class CardsListComponent extends CBitrixComponent
     {
         return 'ylab_cards_list_' . $this->idIBlock;
     }
-
 
     /**
      * Возращает заголовки таблицы.
@@ -220,46 +211,44 @@ class CardsListComponent extends CBitrixComponent
                 'id' => 'CARD_USER',
                 'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.USER'),
                 'default' => true,
-                'sort' => 'PROPERTY_CARD_USER'
+                'sort' => 'PROPERTY_CARD_USER',
             ],
             [
                 'id' => 'CARD_TYPE',
                 'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.TYPE'),
                 'default' => true,
-                'sort' => 'PROPERTY_CARD_TYPE'
+                'sort' => 'PROPERTY_CARD_TYPE',
             ],
             [
                 'id' => 'CARD_SECRET',
                 'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.SECRET'),
                 'default' => true,
             ],
-
             [
-                'id' => 'PRICE_MONTH',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.PRICE_MONTH'),
+                'id' => 'CARD_COST',
+                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.COST'),
                 'default' => true,
-                'sort' => 'PROPERTY_PRICE_MONTH'
+                'sort' => 'PROPERTY_CARD_COST',
             ],
             [
-                'id' => 'QUANTITY_MONTH',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.QUANTITY_MONTH'),
+                'id' => 'CARD_PERIOD',
+                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.PERIOD'),
                 'default' => true,
-                'sort' => 'PROPERTY_QUANTITY_MONTH'
+                'sort' => 'PROPERTY_CARD_PERIOD',
             ],
             [
-                'id' => 'SUMM_PRICE_MONTH',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.SUMM_PRICE_MONTH'),
+                'id' => 'CARD_EXPIRATION_DATE',
+                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.EXPIRATION_DATE'),
                 'default' => true,
+                'sort' => 'PROPERTY_CARD_EXPIRATION_DATE',
             ],
             [
-                'id' => 'END_DATE',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.END_DATE'),
+                'id' => 'SUM_TOTAL',
+                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.SUM_TOTAL'),
                 'default' => true,
-                'sort' => 'PROPERTY_END_DATE'
             ],
         ];
     }
-
 
     /**
      * Метод возвращает ID инфоблока по символьному коду
@@ -278,14 +267,12 @@ class CardsListComponent extends CBitrixComponent
             'cache' => ['ttl' => 3600],
         ]);
         $return = $IB->fetch();
-        if (!$return)
-        {
+        if (!$return) {
             throw new Exception('IBlock with code"' . $code . '" not found');
         }
 
         return $return['ID'];
     }
-
 
     /**
      * Возвращает настройки отображения грид фильтра.
@@ -298,36 +285,20 @@ class CardsListComponent extends CBitrixComponent
             [
                 'id' => 'ID',
                 'name' => 'ID',
-                'type' => 'number',
-            ],
-            [
-                'id' => 'CARD_NUMBER',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.NUMBER'),
-                'type' => 'number',
-            ],
-            [
-                'id' => 'CARD_USER',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.USER'),
-                'type' => 'string'
-            ],
-            [
-                'id' => 'CARD_TYPE',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.TYPE'),
-                'type' => 'string'
-            ],
-            [
-                'id' => 'PRICE_MONTH',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.PRICE_MONTH'),
                 'type' => 'number'
             ],
             [
-                'id' => 'END_DATE',
-                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.END_DATE'),
+                'id' => 'PROPERTY_CARD_COST_VALUE',
+                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.COST'),
+                'type' => 'number'
+            ],
+            [
+                'id' => 'CARD_EXPIRATION_DATE_VALUE',
+                'name' => Loc::getMessage('YLAB.CARD.LIST.CLASS.EXPIRATION_DATE'),
                 'type' => 'date'
             ],
         ];
     }
-
 
     /**
      * Возвращает единственный экземпляр настроек грида.
@@ -339,7 +310,6 @@ class CardsListComponent extends CBitrixComponent
         return $this->gridOption ?? $this->gridOption = new GridOptions($this->getGridId());
     }
 
-
     /**
      * Параметры навигации грида
      *
@@ -347,8 +317,7 @@ class CardsListComponent extends CBitrixComponent
      */
     private function getGridNav(): PageNavigation
     {
-        if ($this->gridNav === null)
-        {
+        if ($this->gridNav === null) {
             $this->gridNav = new PageNavigation($this->getGridId());
             $this->gridNav->allowAllRecords(true)->setPageSize($this->getObGridParams()->GetNavParams()['nPageSize'])
                 ->initFromUri();
@@ -356,7 +325,6 @@ class CardsListComponent extends CBitrixComponent
 
         return $this->gridNav;
     }
-
 
     /**
      * Возвращает значения грид фильтра.
@@ -376,7 +344,6 @@ class CardsListComponent extends CBitrixComponent
         );
     }
 
-
     /**
      * Подготавливает параметры фильтра
      * @param array $arFilterData
@@ -390,24 +357,30 @@ class CardsListComponent extends CBitrixComponent
             'IBLOCK_ID' => $this->idIBlock,
         ];
 
-        if (!empty($arFilterData['ID_from']))
-        {
+        if (!empty($arFilterData['ID_from'])) {
             $arFilter['>=ID'] = (int)$arFilterData['ID_from'];
         }
-        if (!empty($arFilterData['ID_to']))
-        {
+        if (!empty($arFilterData['ID_to'])) {
             $arFilter['<=ID'] = (int)$arFilterData['ID_to'];
         }
 
-        if (!empty($arFilterData['PROPERTY_PRICE_VALUE_from']))
-        {
-            $arFilter['>=PROPERTY_PRICE_VALUE'] = (int)$arFilterData['PROPERTY_PRICE_VALUE_from'];
+        if (!empty($arFilterData['PROPERTY_CARD_COST_VALUE_from'])) {
+            $arFilter['>=PROPERTY_CARD_COST'] = (int)$arFilterData['PROPERTY_CARD_COST_VALUE_from'];
         }
-        if (!empty($arFilterData['PROPERTY_PRICE_VALUE_to']))
-        {
-            $arFilter['<=PROPERTY_PRICE_VALUE'] = (int)$arFilterData['PROPERTY_PRICE_VALUE_to'];
+        if (!empty($arFilterData['PROPERTY_CARD_COST_VALUE_to'])) {
+            $arFilter['<=PROPERTY_CARD_COST'] = (int)$arFilterData['PROPERTY_CARD_COST_VALUE_to'];
         }
 
+        if (!empty($arFilterData['CARD_EXPIRATION_DATE_VALUE_from'])) {
+            $arFilter['>=CARD_EXPIRATION_DATE'] = date(
+                "Y-m-d H:i:s",
+                strtotime($arFilterData['CARD_EXPIRATION_DATE_VALUE_from']));
+        }
+        if (!empty($arFilterData['CARD_EXPIRATION_DATE_VALUE_to'])) {
+            $arFilter['<=CARD_EXPIRATION_DATE'] = date(
+                "Y-m-d H:i:s",
+                strtotime($arFilterData['CARD_EXPIRATION_DATE_VALUE_to']));
+        }
         return $arFilter;
     }
 
